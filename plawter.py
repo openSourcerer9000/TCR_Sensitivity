@@ -4,7 +4,7 @@ import plotly.express as px, pandas as pd
 class noTearsDict(dict):
     def __missing__(self, key):
         return key
-lbls = {'TC':'Time of Concentration (Hrs)','R':'Storage Coefficient (Hrs)','A':'Subbasin Area (SqMi)','imp':'Percent Impervious (%)','nm':'Subbasin Name',
+lbls = {'TC':'Time of Concentration (Hrs)','R':'Storage Coefficient (Hrs)','A':'Subbasin Area (SqMi)','imp':'Imperviousness Ratio','nm':'Subbasin Name',
     'n':"Manning's N",
 'basin_slope': 'Basin Slope (Ft/Mi)',
     '10_85_slope': '10-85 Slope (Ft/Mi)',

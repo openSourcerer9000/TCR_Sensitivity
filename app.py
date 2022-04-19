@@ -20,9 +20,11 @@ import plotly.tools as tls
 try:
     from .ftbend import *
     from .plawter import *
+    from .writeup import *
 except:
     from ftbend import *
     from plawter import *
+    from writeup import *
 
 #construct dataframe-----------
 
@@ -30,7 +32,8 @@ S = np.array([ 2,  8, 12, 16, 47])
 S0 = np.array([109, 204, 242, 284, 531])
 L = np.array([0.5,1,4,5,15])
 N = np.array([0.035, 0.05 , 0.07 , 0.09 , 0.1  , 0.12 , 0.15 , 0.3  , 0.4  ])
-I = np.append(np.arange(0,5),[20,40,100])
+I = np.append(np.arange(0,5),[20,40,100])/100
+assert np.max(I)<1.05
 
 runz = np.array(np.meshgrid(L,S,N,S0,I)).T.reshape(-1,5)
 from functools import reduce
@@ -156,7 +159,7 @@ def create_dash_layout(app):
     # Body 
     body = html.Div(drops+EQ+
         [
-        plawts])
+        plawts,writeup])
     # Footer
     # footer = html.Div([html.Br(), html.Br(), dcc.Markdown(""" ### Built with ![Image](heart.png) in Python using [Dash](https://plotly.com/dash/)""")])
     
