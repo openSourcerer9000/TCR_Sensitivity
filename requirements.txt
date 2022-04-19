@@ -6,3 +6,4 @@ gunicorn==20.0.4
 dash-extensions==0.0.58 #Download features
 dash-bootstrap-components==0.13.1 #this is as high as we can go before dash 2.0 breaking changes come into effect
 whitenoise==5.2.0
+statsmodels==0.13.2
