@@ -9,19 +9,22 @@ lbls = {'TC':'Time of Concentration (Hrs)','R':'Storage Coefficient (Hrs)','A':'
 'basin_slope': 'Basin Slope (Ft/Mi)',
     '10_85_slope': '10-85 Slope (Ft/Mi)',
     'elongation_ratio': 'Elongation Ratio',
-    'longest_length': 'Longest Length (Ft)'}
+    'longest_length': 'Longest Length (Mi)'}
 lbls = noTearsDict(lbls)
 def relabelDA(DA):
     return DA.rename(columns=lbls)
 
     
-def scatta(DF,ctrl,xx,x,y,h=700,w=700,colorscale='plasma'):
+def scatta(DF,x,y,ctrl=None,h=700,w=700,colorscale='plasma'):
     '''lbls, relabelDA all hardcoded here'''
     plotTitle = f'<b>{lbls[x]} vs<br>{lbls[y]}</b>'
     # print(plotTitle)
 
-    fixd = pd.Index(xx).drop(x).to_list()
-    qry = DF.query(' & '.join( [f'`{fx}`=={ctrl[fx]}' for fx in fixd] ))
+    if ctrl:
+        fixd = [xi for xi in ctrl.keys() if xi!=x]
+        qry = DF.query(' & '.join( [f'`{fx}`=={ctrl[fx]}' for fx in fixd] ))
+    else:
+        qry = DF
 
     data = relabelDA(qry.reset_index()[[x,y]])
     data[[lbls[x],lbls[y]]]=data[[lbls[x],lbls[y]]].astype(float)
@@ -42,4 +45,9 @@ def scatta(DF,ctrl,xx,x,y,h=700,w=700,colorscale='plasma'):
     # fig.layout.showlegend = False 
     fig.update_coloraxes(showscale=False)
     fig.update_layout(title_x=0.5)
+    if x!='n':
+        fig.update_yaxes(
+                            scaleanchor = "x",
+                            scaleratio = 1,
+                        )
     return fig

@@ -1,5 +1,5 @@
 import dash
-# from dash import Input, Output, State
+from dash import Input, Output, State
 try:
     import dash_core_components as dcc
     import dash_html_components as html
@@ -64,7 +64,19 @@ yy = ['TC','R']
 
 
 # Instantiate dash app
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG] ) 
+# MATHJAX_CDN = '''
+#     https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/
+#     MathJax.js?config=TeX-MML-AM_CHTML'''
+# external_scripts = [
+#             {'type': 'text/javascript',
+#             'id': 'MathJax-script',
+#             'src': MATHJAX_CDN,
+#             },
+#             ]
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG] ,
+    # external_scripts=external_scripts
+    ) 
 
 # Define the underlying flask app (Used by gunicorn webserver in Heroku production deployment)
 server = app.server 
@@ -78,40 +90,101 @@ def create_dash_layout(app):
     # Set browser tab title
     app.title = "Ft Bend County TC&R Equation Sensitivity Analysis" #browser tab
     
-        
     #create dropdowns
-    drops = [html.H3('Default fixed parameters'),'Compare the sensitivity of each parameter while the rest remain fixed to the below defaults']+[
+    drops = [ dbc.Navbar( html.H3('Ft Bend County TC&R Equation Sensitivity Analysis')
+            ,sticky='top') , 
+            dbc.Navbar( [
+        html.H5('Default fixed parameters:',style={'padding-right':'.5em'}),'Compare the sensitivity of each parameter while the rest remain fixed to the below defaults',
+            # ,style={'padding-left':'5%'})
+                ]
+            
+                
+                
+        ,sticky='top') , 
+        dbc.Navbar( [
+            html.Div(
         dcc.Dropdown(options=[{'label': f'{lbls[x]}: {v}', 'value': v} for v in df[x].unique()], value=df[x].iloc[0], id=f'drop{x}')
-            for x in xx]
+            ,style={'display': 'inline-block','width':'20%'})
+            for x in xx] 
+            ,sticky='top') 
+    ]
+
+    # drops = [html.H3('Ft Bend County TC&R Equation Sensitivity Analysis'),html.Br(),
+    #     html.H5('Default fixed parameters'),'Compare the sensitivity of each parameter while the rest remain fixed to the below defaults',html.Br()]+   [
+    #         html.Div(
+    #     dcc.Dropdown(options=[{'label': f'{lbls[x]}: {v}', 'value': v} for v in df[x].unique()], value=df[x].iloc[0], id=f'drop{x}')
+    #         ,style={'display': 'inline-block','width':'20%'})
+    #         for x in xx] 
+    # drawp = dbc.Navbar( drops
+    #         ,sticky='top'
+    # )
+    EQ = [   
+        html.Div(stuff,style={'display': 'inline-block','padding':f'1.5em 5%'} ) for stuff in [
+        (html.H5('From Ft Bend County Drainage Manual'), dcc.Markdown(
+            ''' 
+                $TC + R = 128\dfrac {(\dfrac{L}{\sqrt{s}})^{0.57}(N)^{0.8}} {(S_0)^{0.11}(10)^{I}}$  
+
+                $TC = (TC + R)*0.38 (\log{S_0})$  
+                  
+                $R = (TC+R)-TC$
+            '''
+            , mathjax=True)
+            ),
+        # '''TC = Clark's time of concentration (hrs)  
+        # R = Clark's storage coefficient (hrs)
+        # L = length of the longest watercourse within the drainage area (miles)
+        # S = average slope along the area's longest watercourse (ft/mile)
+        # N = Manning's weighted roughness coefficient along the longest watercourse
+        # So = average basin slope of land draining overland into the longest watercourse (ft/mile)
+        # I = effective impervious ratio'''
+
+    html.P('\n'.join(["TC = Clark's time of concentration (hrs)",
+    "R = Clark's storage coefficient (hrs)",
+    'L = length of the longest watercourse within the drainage area (miles)',
+    "S = average slope along the area's longest watercourse (ft/mile)",
+    "N = Manning's weighted roughness coefficient along the longest watercourse",
+    'So = average basin slope of land draining overland into the longest watercourse (ft/mile)',
+    'I = effective impervious ratio']),style={'whiteSpace': 'pre-wrap','padding-left':'10%'})
+    # )
+    ] ]
 
     plawts = html.Div(children=[],id='plawts')
 
     # Header
-    header = html.Div([html.Br(), dcc.Markdown(""" # Ft Bend County TC&R Equation Sensitivity Analysis"""), html.Br()])
+    # header = html.Div([html.Br(), dcc.Markdown(""" # Ft Bend County TC&R Equation Sensitivity Analysis"""), html.Br()])
     
     # Body 
-    body = html.Div(drops+[plawts])
+    body = html.Div(drops+EQ+
+        [
+        plawts])
     # Footer
     # footer = html.Div([html.Br(), html.Br(), dcc.Markdown(""" ### Built with ![Image](heart.png) in Python using [Dash](https://plotly.com/dash/)""")])
     
     # Assemble dash layout 
-    app.layout = html.Div([header, plawts])
+    app.layout = html.Div(body)
 
-    # @app.callback(
-    # Output(f'plawts', "children"),
-    # [Input(f'drop{x}', f'val{x}') for x in xx]
-    # )
-    # def refix(*args):
-    #     ctrl =  dict(zip(xx,args))
-    #     sctrs = [
-    #         html.Div(
-    #             dcc.Graph(figure=
-    #                 scatta(df,ctrl,xx,x,y)
-    #             )
-    #         ,id=f'{x}v{y}'
-    #         ,style={'display': 'inline-block'} )
-    #             for x,y in product(xx,yy) ]
-    #     return sctrs
+    @app.callback(
+    Output(f'plawts', "children"),
+    [Input(component_id=f'drop{x}',component_property='value') for x in xx]
+    )
+    def refix(*args):
+        ctrl =  dict(zip(xx,args))
+        sctrs = [
+            html.Div(
+                dcc.Graph(figure=
+                    scatta(df,x,y,ctrl)
+                )
+            # ,id=f'{x}v{y}'
+            ,style={'display': 'inline-block'} )
+                for x,y in product(xx,yy) ]
+        sctrs += [html.H6('Only the Basin Slope parameter is fixed for TC vs R:'),html.Div(
+                dcc.Graph(figure=
+                    scatta(df,'TC','R',ctrl={'basin_slope':ctrl['basin_slope']})
+                )
+            # ,id=f'{TC}v{R}'
+            # ,style={'display': 'inline-block'} 
+            )]
+        return sctrs
 
 
     return app

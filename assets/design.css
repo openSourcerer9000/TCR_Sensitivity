@@ -1,0 +1,11 @@
+#dropz {
+    position: sticky;
+    position: -webkit-sticky;
+    /* width: 8%; */
+    /* height: 100%; */
+    /* vertical-align: middle;
+    text-align: center;
+    top: 0; */
+    z-index: 999;
+    /* background: #EDF0F6; */
+}
